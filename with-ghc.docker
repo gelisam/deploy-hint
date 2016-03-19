@@ -10,8 +10,8 @@ RUN cabal update && \
     cabal sandbox init && \
     cabal install --only-dependencies
 
-RUN mkdir -p my-program/libs && \
-    cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/libs/
+RUN mkdir -p my-program/c-libs && \
+    cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/c-libs/
 
 COPY src /root/src
 RUN cabal install && \
