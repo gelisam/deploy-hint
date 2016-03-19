@@ -10,7 +10,9 @@ COPY                  src /root/src
 RUN cabal sandbox init && \
     cabal install
 RUN mkdir my-program && \
-    cp .cabal-sandbox/bin/my-program my-program/my-program && \
+    cp .cabal-sandbox/bin/my-program my-program/ && \
+    mkdir my-program/libs && \
+    cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/libs/ && \
     tar czvf my-program.tar.gz my-program
 
 CMD ["./my-program/my-program"]
