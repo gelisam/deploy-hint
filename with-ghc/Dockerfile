@@ -7,9 +7,11 @@ COPY my-program.cabal /root/my-program.cabal
 COPY Setup.hs         /root/Setup.hs
 COPY                  src /root/src
 
-RUN cabal sandbox init && \
-    cabal install
-RUN mkdir my-program && \
+RUN cabal update && \
+    cabal sandbox init && \
+    cabal install --only-dependencies
+RUN cabal install && \
+    mkdir my-program && \
     cp .cabal-sandbox/bin/my-program my-program/ && \
     mkdir my-program/libs && \
     cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/libs/ && \
