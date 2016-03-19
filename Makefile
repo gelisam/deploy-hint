@@ -1,14 +1,21 @@
 WITH_GHC_IMAGE=with-ghc
+WITHOUT_GHC_IMAGE=without-ghc
 WITH_GHC_CONTAINER=build-with-ghc
+WITHOUT_GHC_CONTAINER=run-without-ghc
 PROGRAM=my-program
 
 all: test
-.PHONY: all build test clean clobber
+.PHONY: all list_dependencies build test clean clobber
 
-build: $(PROGRAM)/$(PROGRAM)
+list_dependencies: proofs/$(WITH_GHC_IMAGE)
+	docker rm -vf $(WITH_GHC_CONTAINER) &> /dev/null || true
+	docker run -it --name $(WITH_GHC_CONTAINER) $(WITH_GHC_IMAGE) ldd /root/$(PROGRAM)/$(PROGRAM)
+
+build: proofs/$(WITHOUT_GHC_IMAGE)
 
 test: build
-	./$(PROGRAM)/$(PROGRAM)
+	docker rm -vf $(WITHOUT_GHC_CONTAINER) &> /dev/null || true
+	docker run -it --name $(WITHOUT_GHC_CONTAINER) $(WITHOUT_GHC_IMAGE) /root/$(PROGRAM)/$(PROGRAM)
 
 
 proofs/$(WITH_GHC_IMAGE): with-ghc/Dockerfile $(PROGRAM).cabal src/Main.hs
@@ -16,7 +23,13 @@ proofs/$(WITH_GHC_IMAGE): with-ghc/Dockerfile $(PROGRAM).cabal src/Main.hs
 	docker build -f $< -t $(WITH_GHC_IMAGE) .
 	touch $@
 
+proofs/$(WITHOUT_GHC_IMAGE): without-ghc/Dockerfile $(PROGRAM).tar.gz
+	mkdir -p proofs
+	docker build -f $< -t $(WITHOUT_GHC_IMAGE) .
+	touch $@
+
 proofs/$(WITH_GHC_CONTAINER): proofs/$(WITH_GHC_IMAGE)
+	docker rm -vf $(WITH_GHC_CONTAINER) &> /dev/null || true
 	docker run --name $(WITH_GHC_CONTAINER) $(WITH_GHC_IMAGE) echo "built."
 	touch $@
 
@@ -29,9 +42,10 @@ $(PROGRAM)/$(PROGRAM): $(PROGRAM).tar.gz
 
 clean:
 	rm -rf $(PROGRAM)/
-	docker rm -vf $(WITH_GHC_CONTAINER) || true
+	docker rm -vf $(WITH_GHC_CONTAINER) $(WITHOUT_GHC_CONTAINER) || true
 	docker rmi $(WITH_GHC_IMAGE) || true
 	rm -rf proofs/
 
 clobber: clean
+	docker rmi $(WITHOUT_GHC_IMAGE) || true
 	rm -rf $(PROGRAM).tar.gz
