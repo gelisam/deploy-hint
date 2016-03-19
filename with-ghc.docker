@@ -11,7 +11,8 @@ RUN cabal update && \
     cabal install --only-dependencies
 
 RUN mkdir -p my-program/c-libs && \
-    cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/c-libs/
+    cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/c-libs/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3 my-program/haskell-core-libs
 
 COPY src /root/src
 RUN cabal install && \
