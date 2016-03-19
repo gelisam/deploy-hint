@@ -15,7 +15,7 @@ build: proofs/$(WITHOUT_GHC_IMAGE)
 
 test: build
 	docker rm -vf $(WITHOUT_GHC_CONTAINER) &> /dev/null || true
-	docker run -it --name $(WITHOUT_GHC_CONTAINER) $(WITHOUT_GHC_IMAGE) /root/$(PROGRAM)/$(PROGRAM)
+	echo '()' | docker run -i --name $(WITHOUT_GHC_CONTAINER) $(WITHOUT_GHC_IMAGE) /root/$(PROGRAM)/$(PROGRAM)
 
 
 proofs/$(WITH_GHC_IMAGE): with-ghc.docker $(PROGRAM).cabal src/Main.hs
