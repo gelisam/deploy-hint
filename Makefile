@@ -18,12 +18,12 @@ test: build
 	docker run -it --name $(WITHOUT_GHC_CONTAINER) $(WITHOUT_GHC_IMAGE) /root/$(PROGRAM)/$(PROGRAM)
 
 
-proofs/$(WITH_GHC_IMAGE): with-ghc/Dockerfile $(PROGRAM).cabal src/Main.hs
+proofs/$(WITH_GHC_IMAGE): with-ghc.docker $(PROGRAM).cabal src/Main.hs
 	mkdir -p proofs
 	docker build -f $< -t $(WITH_GHC_IMAGE):cache -t $(WITH_GHC_IMAGE):latest .
 	touch $@
 
-proofs/$(WITHOUT_GHC_IMAGE): without-ghc/Dockerfile $(PROGRAM).tar.gz
+proofs/$(WITHOUT_GHC_IMAGE): without-ghc.docker $(PROGRAM).tar.gz
 	mkdir -p proofs
 	docker build -f $< -t $(WITHOUT_GHC_IMAGE) .
 	touch $@
