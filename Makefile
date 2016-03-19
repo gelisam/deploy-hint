@@ -36,9 +36,6 @@ proofs/$(WITH_GHC_CONTAINER): proofs/$(WITH_GHC_IMAGE)
 $(PROGRAM).tar.gz: proofs/$(WITH_GHC_CONTAINER)
 	docker cp $(WITH_GHC_CONTAINER):/root/$(PROGRAM).tar.gz $@
 
-$(PROGRAM)/$(PROGRAM): $(PROGRAM).tar.gz
-	tar xvf $<
-
 
 clean:
 	rm -rf $(PROGRAM)/
