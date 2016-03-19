@@ -12,6 +12,7 @@ RUN cabal update && \
 
 RUN mkdir -p my-program/c-libs && \
     cp /usr/lib/x86_64-linux-gnu/libgmp.so.10 my-program/c-libs/ && \
+    ln -s libgmp.so.10 my-program/c-libs/libgmp.so && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3 my-program/haskell-core-libs
 
 COPY src /root/src
