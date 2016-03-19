@@ -3,13 +3,14 @@ FROM       haskell:7.10.3
 MAINTAINER Samuel Gélineau <gelisam@gmail.com>
 
 WORKDIR /root
+
 COPY my-program.cabal /root/my-program.cabal
 COPY Setup.hs         /root/Setup.hs
-COPY                  src /root/src
-
 RUN cabal update && \
     cabal sandbox init && \
     cabal install --only-dependencies
+
+COPY src /root/src
 RUN cabal install && \
     mkdir my-program && \
     cp .cabal-sandbox/bin/my-program my-program/ && \
