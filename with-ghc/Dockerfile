@@ -2,9 +2,6 @@
 FROM       haskell:7.10.3
 MAINTAINER Samuel Gélineau <gelisam@gmail.com>
 
-## ensure locale is set during build
-ENV LANG            C.UTF-8
-
 WORKDIR /root
 COPY my-program.cabal /root/my-program.cabal
 COPY Setup.hs         /root/Setup.hs
