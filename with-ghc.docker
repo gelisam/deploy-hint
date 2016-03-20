@@ -6,8 +6,10 @@ WORKDIR /root
 
 COPY my-program.cabal /root/my-program.cabal
 COPY Setup.hs         /root/Setup.hs
+COPY customized-hint  /root/customized-hint
 RUN cabal update && \
     cabal sandbox init && \
+    cabal sandbox add-source customized-hint && \
     cabal install --only-dependencies
 
 RUN mkdir -p                                                               my-program/c-libs && \
