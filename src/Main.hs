@@ -26,7 +26,7 @@ runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
 runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs "/opt/ghc/7.10.3/lib/ghc-7.10.3" args
   where
     args = [ "-package-db /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d"
-           , "-package-db /root/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d"
+           , "-package-db /root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
            ]
 
 
