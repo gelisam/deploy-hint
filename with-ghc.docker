@@ -23,7 +23,12 @@ RUN mkdir -p                                                               my-pr
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/integer-gmp-*.conf my-program/haskell-core-libs/package.conf.d/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/package.cache      my-program/haskell-core-libs/package.conf.d/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-core-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-core-libs/
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-core-libs/ && \
+    mkdir -p                                                               my-program/haskell-libs/lib/x86_64-linux-ghc-7.10.3 && \
+    cp -r .cabal-sandbox/lib/x86_64-linux-ghc-7.10.3/acme-dont-*           my-program/haskell-libs/lib/x86_64-linux-ghc-7.10.3/ && \
+    mkdir -p                                                               my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d && \
+    cp -r .cabal-sandbox/*-packages.conf.d/acme-dont-*.conf                my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d/ && \
+    cp -r .cabal-sandbox/*-packages.conf.d/package.cache                   my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d/
 
 COPY src /root/src
 RUN cabal install && \
