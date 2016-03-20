@@ -14,6 +14,7 @@ COPY my-program.tar.gz /root/my-program.tar.gz
 
 RUN tar xvf my-program.tar.gz && \
     mkdir -p /opt/ghc/7.10.3/lib && \
-    mv my-program/haskell-core-libs /opt/ghc/7.10.3/lib/ghc-7.10.3
+    mv my-program/haskell-core-libs /opt/ghc/7.10.3/lib/ghc-7.10.3 && \
+    mv my-program/haskell-libs /root/.cabal-sandbox
 
 CMD ["./my-program/my-program"]
