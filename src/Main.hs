@@ -22,10 +22,13 @@ interpretDon'tReturn u = do
     return (don't (return u))
 
 
+libdir :: String
+libdir = "/root/my-program/haskell-core-libs"
+
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
-runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs "/root/my-program/haskell-core-libs" args
+runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs libdir args
   where
-    args = [ "-package-db /root/my-program/haskell-core-libs/package.conf.d"
+    args = [ printf "-package-db %s/package.conf.d" libdir
            , "-package-db /root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
            ]
 
@@ -35,12 +38,12 @@ main = do
     putStrLn "please type '()':"
     u <- readLn
     
-    r <- runInterpreter "/root/my-program/haskell-core-libs" (interpretDiag u)
+    r <- runInterpreter libdir (interpretDiag u)
     printf "(\\x -> (x,x)) %s is:\n" (show u)
     print r
     
     putStrLn "and now, let's try the Prelude..."
-    r <- runInterpreter "/root/my-program/haskell-core-libs" (interpretId u)
+    r <- runInterpreter libdir (interpretId u)
     printf "id %s is:\n" (show u)
     print r
     
