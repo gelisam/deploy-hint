@@ -23,7 +23,7 @@ interpretDon'tReturn u = do
 
 
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
-runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs args
+runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs "/opt/ghc/7.10.3/lib/ghc-7.10.3" args
   where
     args = [ "-package-db /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d"
            , "-package-db /root/.cabal-sandbox/x86_64-linux-ghc-7.10.3-packages.conf.d"
@@ -35,12 +35,12 @@ main = do
     putStrLn "please type '()':"
     u <- readLn
     
-    r <- runInterpreter (interpretDiag u)
+    r <- runInterpreter "/opt/ghc/7.10.3/lib/ghc-7.10.3" (interpretDiag u)
     printf "(\\x -> (x,x)) %s is:\n" (show u)
     print r
     
     putStrLn "and now, let's try the Prelude..."
-    r <- runInterpreter (interpretId u)
+    r <- runInterpreter "/opt/ghc/7.10.3/lib/ghc-7.10.3" (interpretId u)
     printf "id %s is:\n" (show u)
     print r
     

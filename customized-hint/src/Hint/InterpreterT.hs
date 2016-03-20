@@ -34,13 +34,14 @@ newtype InterpreterT m a = InterpreterT {
     deriving (Functor, Monad, MonadIO, MonadThrow, MonadCatch, MonadMask)
 
 execute :: (MonadIO m, MonadMask m, Functor m)
-        => InterpreterSession
+        => String
+        -> InterpreterSession
         -> InterpreterT m a
         -> m (Either InterpreterError a)
-execute s = try
-          . GHC.runGhcT (Just GHC.Paths.libdir)
-          . flip runReaderT s
-          . unInterpreterT
+execute libdir s = try
+                 . GHC.runGhcT (Just libdir)
+                 . flip runReaderT s
+                 . unInterpreterT
 
 instance MonadTrans InterpreterT where
     lift = InterpreterT . lift . lift
@@ -106,21 +107,23 @@ initialize args =
 -- (SIGINT, SIGHUP, SIGTERM, SIGQUIT on Posix systems, Ctrl-C handler on Windows).
 -- In future versions of hint, this might be controlled by the user.
 runInterpreter :: (MonadIO m, MonadMask m, Functor m)
-               => InterpreterT m a
+               => String
+               -> InterpreterT m a
                -> m (Either InterpreterError a)
-runInterpreter = runInterpreterWithArgs []
+runInterpreter libdir = runInterpreterWithArgs libdir []
 
 -- | Executes the interpreter, setting args passed in as though they
 -- were command-line args. Returns @Left InterpreterError@ in case of
 -- error.
 runInterpreterWithArgs :: (MonadIO m, MonadMask m, Functor m)
-                          => [String]
+                          => String
+                          -> [String]
                           -> InterpreterT m a
                           -> m (Either InterpreterError a)
-runInterpreterWithArgs args action =
+runInterpreterWithArgs libdir args action =
   ifInterpreterNotRunning $
     do s <- newInterpreterSession `MC.catch` rethrowGhcException
-       execute s (initialize args >> action `finally` cleanSession)
+       execute libdir s (initialize args >> action `finally` cleanSession)
     where rethrowGhcException   = throwM . GhcException . showGhcEx
           newInterpreterSession = newSessionData ()
           cleanSession =
