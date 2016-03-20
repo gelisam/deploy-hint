@@ -33,7 +33,7 @@ RUN mkdir -p                                                               my-pr
                                                                            my-program/haskell-core-libs/package.conf.d/ghc-prim-*.conf && \
     sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
                                                                            my-program/haskell-core-libs/package.conf.d/integer-gmp-*.conf && \
-    ghc-pkg --global-package-db=/opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d --package-db=my-program/haskell-core-libs/package.conf.d recache && \
+    ghc-pkg --package-db=my-program/haskell-core-libs/package.conf.d recache && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-core-libs/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-core-libs/ && \
     mkdir -p                                                               my-program/haskell-libs/lib/x86_64-linux-ghc-7.10.3 && \
@@ -41,7 +41,7 @@ RUN mkdir -p                                                               my-pr
     mkdir -p                                                               my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d && \
     cp -r .cabal-sandbox/*-packages.conf.d/acme-dont-*.conf                my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d/ && \
     sed -i 's/\/root\/.cabal-sandbox/\/root\/my-program\/haskell-libs/g'   my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d/acme-dont-*.conf && \
-    ghc-pkg --global-package-db=/opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d --package-db=my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d recache
+    ghc-pkg --package-db=my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d recache
 
 COPY src /root/src
 RUN cabal install && \
