@@ -1,6 +1,7 @@
 import Control.Monad
 import Text.Printf
 import Language.Haskell.Interpreter
+import Language.Haskell.Interpreter.Unsafe
 
 
 interpretDiag :: () -> Interpreter ((),())
@@ -19,7 +20,16 @@ interpretDon'tReturn u = do
     setImports ["Acme.Dont"]
     don't <- interpret "don't" (as :: IO () -> IO ())
     return (don't (return u))
+
+
+runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
+runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs args
+  where
+    args = ["-v", printf "-package-db %s" packageDb]
     
+    -- TODO: infer the path relative to the executable
+    packageDb = "/root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
+
 
 main :: IO ()
 main = do
@@ -36,7 +46,7 @@ main = do
     print r
     
     putStrLn "and finally, a library from hackage."
-    r <- runInterpreter (interpretDon'tReturn u)
+    r <- runInterpreterWithPackageDb (interpretDon'tReturn u)
     printf "don't (return %s) is:\n" (show u)
     case r of
       Left err -> print err
