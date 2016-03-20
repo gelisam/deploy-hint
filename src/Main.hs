@@ -23,7 +23,7 @@ interpretDon'tReturn u = do
 
 
 libdir :: String
-libdir = "/root/my-program/haskell-core-libs"
+libdir = "/root/my-program/haskell-libs"
 
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
 runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs libdir args

@@ -15,31 +15,31 @@ RUN cabal update && \
 RUN mkdir -p                                                               my-program/c-libs && \
     cp /usr/lib/x86_64-linux-gnu/libgmp.so.10                              my-program/c-libs/ && \
     ln -s libgmp.so.10                                                     my-program/c-libs/libgmp.so && \
-    mkdir -p                                                               my-program/haskell-core-libs && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/rts                               my-program/haskell-core-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/base_*                            my-program/haskell-core-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/ghcpr_*                           my-program/haskell-core-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/integ_*                           my-program/haskell-core-libs/ && \
-    cp -r .cabal-sandbox/lib/x86_64-linux-ghc-7.10.3/acme-dont-*           my-program/haskell-core-libs/ && \
-    mkdir -p                                                               my-program/haskell-core-libs/package.conf.d && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/builtin_rts.conf   my-program/haskell-core-libs/package.conf.d && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/base-*.conf        my-program/haskell-core-libs/package.conf.d/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/ghc-prim-*.conf    my-program/haskell-core-libs/package.conf.d/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/integer-gmp-*.conf my-program/haskell-core-libs/package.conf.d/ && \
-    cp -r .cabal-sandbox/*-packages.conf.d/acme-dont-*.conf                my-program/haskell-core-libs/package.conf.d/ && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
-                                                                           my-program/haskell-core-libs/package.conf.d/builtin_rts.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
-                                                                           my-program/haskell-core-libs/package.conf.d/base-*.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
-                                                                           my-program/haskell-core-libs/package.conf.d/ghc-prim-*.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
-                                                                           my-program/haskell-core-libs/package.conf.d/integer-gmp-*.conf && \
-    sed -i 's/\/root\/.cabal-sandbox\/lib\/x86_64-linux-ghc-7.10.3/\/root\/my-program\/haskell-core-libs/g' \
-                                                                           my-program/haskell-core-libs/package.conf.d/acme-dont-*.conf && \
-    ghc-pkg --package-db=my-program/haskell-core-libs/package.conf.d recache && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-core-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-core-libs/
+    mkdir -p                                                               my-program/haskell-libs && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/rts                               my-program/haskell-libs/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/base_*                            my-program/haskell-libs/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/ghcpr_*                           my-program/haskell-libs/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/integ_*                           my-program/haskell-libs/ && \
+    cp -r .cabal-sandbox/lib/x86_64-linux-ghc-7.10.3/acme-dont-*           my-program/haskell-libs/ && \
+    mkdir -p                                                               my-program/haskell-libs/package.conf.d && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/builtin_rts.conf   my-program/haskell-libs/package.conf.d && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/base-*.conf        my-program/haskell-libs/package.conf.d/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/ghc-prim-*.conf    my-program/haskell-libs/package.conf.d/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/integer-gmp-*.conf my-program/haskell-libs/package.conf.d/ && \
+    cp -r .cabal-sandbox/*-packages.conf.d/acme-dont-*.conf                my-program/haskell-libs/package.conf.d/ && \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+                                                                           my-program/haskell-libs/package.conf.d/builtin_rts.conf && \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+                                                                           my-program/haskell-libs/package.conf.d/base-*.conf && \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+                                                                           my-program/haskell-libs/package.conf.d/ghc-prim-*.conf && \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+                                                                           my-program/haskell-libs/package.conf.d/integer-gmp-*.conf && \
+    sed -i 's/\/root\/.cabal-sandbox\/lib\/x86_64-linux-ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+                                                                           my-program/haskell-libs/package.conf.d/acme-dont-*.conf && \
+    ghc-pkg --package-db=my-program/haskell-libs/package.conf.d recache && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-libs/ && \
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-libs/
 
 COPY src /root/src
 RUN cabal install && \
