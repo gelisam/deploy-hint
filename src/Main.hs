@@ -25,10 +25,9 @@ interpretDon'tReturn u = do
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
 runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs args
   where
-    args = ["-v", printf "-package-db %s" packageDb]
-    
-    -- TODO: infer the path relative to the executable
-    packageDb = "/root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
+    args = [ "-package-db /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d"
+           , "-package-db /root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
+           ]
 
 
 main :: IO ()
