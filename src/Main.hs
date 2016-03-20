@@ -1,3 +1,4 @@
+import Control.Monad
 import Text.Printf
 import Language.Haskell.Interpreter
 
@@ -13,6 +14,13 @@ interpretId u = do
     f <- interpret "id" (as :: () -> ())
     return (f u)
 
+interpretDon'tReturn :: () -> Interpreter (IO ())
+interpretDon'tReturn u = do
+    setImports ["Acme.Dont"]
+    don't <- interpret "don't" (as :: IO () -> IO ())
+    return (don't (return u))
+    
+
 main :: IO ()
 main = do
     putStrLn "please type '()':"
@@ -26,3 +34,12 @@ main = do
     r <- runInterpreter (interpretId u)
     printf "id %s is:\n" (show u)
     print r
+    
+    putStrLn "and finally, a library from hackage."
+    r <- runInterpreter (interpretDon'tReturn u)
+    printf "don't (return %s) is:\n" (show u)
+    case r of
+      Left err -> print err
+      Right body -> do
+        r <- body
+        print r
