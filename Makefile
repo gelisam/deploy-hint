@@ -20,7 +20,10 @@ test: build
 
 proofs/$(WITH_GHC_IMAGE): with-ghc.docker $(PROGRAM).cabal src/Main.hs
 	mkdir -p proofs
-	docker build -f $< -t $(WITH_GHC_IMAGE):cache -t $(WITH_GHC_IMAGE):latest .
+	docker rmi $(WITH_GHC_IMAGE):latest &> /dev/null || true # prevent orphans
+	docker build -f $< -t $(WITH_GHC_IMAGE):latest . # fast if :cache contains shared work
+	docker rmi $(WITH_GHC_IMAGE):cache &> /dev/null || true # drop cached work which is no longer used
+	docker tag $(WITH_GHC_IMAGE):latest $(WITH_GHC_IMAGE):cache # cache for next time
 	touch $@
 
 proofs/$(WITHOUT_GHC_IMAGE): without-ghc.docker $(PROGRAM).tar.gz
