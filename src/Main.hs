@@ -23,9 +23,9 @@ interpretDon'tReturn u = do
 
 
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
-runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs "/opt/ghc/7.10.3/lib/ghc-7.10.3" args
+runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs "/root/my-program/haskell-core-libs" args
   where
-    args = [ "-package-db /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d"
+    args = [ "-package-db /root/my-program/haskell-core-libs/package.conf.d"
            , "-package-db /root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
            ]
 
@@ -35,12 +35,12 @@ main = do
     putStrLn "please type '()':"
     u <- readLn
     
-    r <- runInterpreter "/opt/ghc/7.10.3/lib/ghc-7.10.3" (interpretDiag u)
+    r <- runInterpreter "/root/my-program/haskell-core-libs" (interpretDiag u)
     printf "(\\x -> (x,x)) %s is:\n" (show u)
     print r
     
     putStrLn "and now, let's try the Prelude..."
-    r <- runInterpreter "/opt/ghc/7.10.3/lib/ghc-7.10.3" (interpretId u)
+    r <- runInterpreter "/root/my-program/haskell-core-libs" (interpretId u)
     printf "id %s is:\n" (show u)
     print r
     
