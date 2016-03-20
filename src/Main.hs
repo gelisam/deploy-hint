@@ -28,9 +28,7 @@ libdir = "/root/my-program/haskell-core-libs"
 runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
 runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs libdir args
   where
-    args = [ printf "-package-db %s/package.conf.d" libdir
-           , "-package-db /root/my-program/haskell-libs/x86_64-linux-ghc-7.10.3-packages.conf.d"
-           ]
+    args = [printf "-package-db %s/package.conf.d" libdir]
 
 
 main :: IO ()
