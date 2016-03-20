@@ -17,7 +17,7 @@ interpretId u = do
 
 interpretDon'tReturn :: () -> Interpreter (IO ())
 interpretDon'tReturn u = do
-    setImports ["Acme.Dont"]
+    setImports ["Prelude","Acme.Dont"]
     don't <- interpret "don't" (as :: IO () -> IO ())
     return (don't (return u))
 
