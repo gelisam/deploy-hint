@@ -25,12 +25,6 @@ interpretDon'tReturn u = do
 libdir :: String
 libdir = "/root/my-program/haskell-libs"
 
-runInterpreterWithPackageDb :: Interpreter a -> IO (Either InterpreterError a)
-runInterpreterWithPackageDb = unsafeRunInterpreterWithArgs libdir args
-  where
-    args = [printf "-package-db %s/package.conf.d" libdir]
-
-
 main :: IO ()
 main = do
     putStrLn "please type '()':"
@@ -46,7 +40,7 @@ main = do
     print r
     
     putStrLn "and finally, a library from hackage."
-    r <- runInterpreterWithPackageDb (interpretDon'tReturn u)
+    r <- runInterpreter libdir (interpretDon'tReturn u)
     printf "don't (return %s) is:\n" (show u)
     case r of
       Left err -> print err
