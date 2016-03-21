@@ -39,8 +39,10 @@ RUN mkdir -p                                                               my-pr
                                                                            my-program/haskell-libs/package.conf.d/acme-dont-*.conf && \
     ghc-pkg --package-db=my-program/haskell-libs/package.conf.d recache && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-libs/ && \
-    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-libs/
+    cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-libs/ && \
+    mkdir -p                                                               my-program/bin
 
+COPY fake_gcc.sh /root/my-program/bin/fake_gcc.sh
 COPY src /root/src
 RUN cabal install && \
     cp .cabal-sandbox/bin/my-program my-program/ && \
