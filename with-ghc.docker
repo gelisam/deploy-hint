@@ -40,6 +40,7 @@ RUN mkdir -p                                                               my-pr
     ghc-pkg --package-db=my-program/haskell-libs/package.conf.d recache && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-libs/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-libs/ && \
+    sed -i 's/\/usr\/bin\/gcc/\/root\/my-program\/bin\/fake_gcc.sh/g'      my-program/haskell-libs/settings && \
     mkdir -p                                                               my-program/bin
 
 COPY fake_gcc.sh /root/my-program/bin/fake_gcc.sh
