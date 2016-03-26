@@ -746,24 +746,6 @@ matchesPkg :: PackageArg -> InstalledPackageInfo -> Bool
 (Substring _ m) `matchesPkg` pkg = m (display (sourcePackageId pkg))
 
 -- -----------------------------------------------------------------------------
--- Field
-
-describeField :: Verbosity -> [Flag] -> PackageArg -> [String] -> Bool -> IO ()
-describeField verbosity my_flags pkgarg fields expand_pkgroot = do
-  (_, _, flag_db_stack) <- 
-      getPkgDatabases verbosity False{-modify-} False{-use user-}
-                                True{-use cache-} expand_pkgroot my_flags
-  fns <- mapM toField fields
-  ps <- findPackages flag_db_stack pkgarg
-  mapM_ (selectFields fns) ps
-  where showFun = showInstalledPackageInfoField
-        toField f = case showFun f of
-                    Nothing -> die ("unknown field: " ++ f)
-                    Just fn -> return fn
-        selectFields fns pinfo = mapM_ (\fn->putStrLn (fn pinfo)) fns
-
-
--- -----------------------------------------------------------------------------
 -- Check: Check consistency of installed packages
 
 checkConsistency :: Verbosity -> [Flag] -> IO ()
