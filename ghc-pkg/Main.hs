@@ -221,13 +221,6 @@ parseGlobPackageId =
       _ <- string "-*"
       return (PackageIdentifier{ pkgName = n, pkgVersion = globVersion }))
 
-readPackageArg :: AsPackageArg -> String -> IO PackageArg
-readPackageArg AsIpid str =
-    parseCheck (IPId `fmap` parse) str "installed package id"
-readPackageArg AsPackageKey str =
-    parseCheck (PkgKey `fmap` parse) str "package key"
-readPackageArg AsDefault str = Id `fmap` readGlobPkgId str
-
 -- globVersion means "all versions"
 globVersion :: Version
 globVersion = Version [] ["*"]
