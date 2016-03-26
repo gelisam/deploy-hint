@@ -94,15 +94,8 @@ main = do
   args <- getArgs
 
   case getOpt Permute (flags ++ deprecFlags) args of
-        (cli,_,[]) | FlagHelp `elem` cli -> do
-           prog <- getProgramName
-           bye (usageInfo (usageHeader prog) flags)
-        (cli,_,[]) | FlagVersion `elem` cli ->
-           bye ourCopyright
         (cli,nonopts,[]) ->
-           case getVerbosity Normal cli of
-           Right v -> runit v cli nonopts
-           Left err -> die err
+           runit Normal cli nonopts
         (_,_,errors) -> do
            prog <- getProgramName
            die (concat errors ++ shortUsage prog)
@@ -111,90 +104,23 @@ main = do
 -- Command-line syntax
 
 data Flag
-  = FlagUser
-  | FlagGlobal
-  | FlagHelp
-  | FlagVersion
-  | FlagConfig FilePath
+  = FlagGlobal
   | FlagGlobalConfig FilePath
-  | FlagUserConfig FilePath
-  | FlagForce
-  | FlagForceFiles
-  | FlagAutoGHCiLibs
-  | FlagMultiInstance
-  | FlagExpandEnvVars
-  | FlagExpandPkgroot
-  | FlagNoExpandPkgroot
-  | FlagSimpleOutput
-  | FlagNamesOnly
-  | FlagIgnoreCase
-  | FlagNoUserDb
-  | FlagVerbosity (Maybe String)
-  | FlagIPId
-  | FlagPackageKey
   deriving Eq
 
 flags :: [OptDescr Flag]
 flags = [
-  Option [] ["user"] (NoArg FlagUser)
-        "use the current user's package database",
   Option [] ["global"] (NoArg FlagGlobal)
         "use the global package database",
-  Option ['f'] ["package-db"] (ReqArg FlagConfig "FILE/DIR")
-        "use the specified package database",
-  Option [] ["package-conf"] (ReqArg FlagConfig "FILE/DIR")
-        "use the specified package database (DEPRECATED)",
   Option [] ["global-package-db"] (ReqArg FlagGlobalConfig "DIR")
-        "location of the global package database",
-  Option [] ["no-user-package-db"] (NoArg FlagNoUserDb)
-        "never read the user package database",
-  Option [] ["user-package-db"] (ReqArg FlagUserConfig "DIR")
-        "location of the user package database (use instead of default)",
-  Option [] ["no-user-package-conf"] (NoArg FlagNoUserDb)
-        "never read the user package database (DEPRECATED)",
-  Option [] ["force"] (NoArg FlagForce)
-         "ignore missing dependencies, directories, and libraries",
-  Option [] ["force-files"] (NoArg FlagForceFiles)
-         "ignore missing directories and libraries only",
-  Option ['g'] ["auto-ghci-libs"] (NoArg FlagAutoGHCiLibs)
-        "automatically build libs for GHCi (with register)",
-  Option [] ["enable-multi-instance"] (NoArg FlagMultiInstance)
-        "allow registering multiple instances of the same package version",
-  Option [] ["expand-env-vars"] (NoArg FlagExpandEnvVars)
-        "expand environment variables (${name}-style) in input package descriptions",
-  Option [] ["expand-pkgroot"] (NoArg FlagExpandPkgroot)
-        "expand ${pkgroot}-relative paths to absolute in output package descriptions",
-  Option [] ["no-expand-pkgroot"] (NoArg FlagNoExpandPkgroot)
-        "preserve ${pkgroot}-relative paths in output package descriptions",
-  Option ['?'] ["help"] (NoArg FlagHelp)
-        "display this help and exit",
-  Option ['V'] ["version"] (NoArg FlagVersion)
-        "output version information and exit",
-  Option [] ["simple-output"] (NoArg FlagSimpleOutput)
-        "print output in easy-to-parse format for some commands",
-  Option [] ["names-only"] (NoArg FlagNamesOnly)
-        "only print package names, not versions; can only be used with list --simple-output",
-  Option [] ["ignore-case"] (NoArg FlagIgnoreCase)
-        "ignore case for substring matching",
-  Option [] ["ipid"] (NoArg FlagIPId)
-        "interpret package arguments as installed package IDs",
-  Option [] ["package-key"] (NoArg FlagPackageKey)
-        "interpret package arguments as installed package keys",
-  Option ['v'] ["verbose"] (OptArg FlagVerbosity "Verbosity")
-        "verbosity level (0-2, default 1)"
+        "location of the global package database"
   ]
 
 data Verbosity = Silent | Normal | Verbose
     deriving (Show, Eq, Ord)
 
 getVerbosity :: Verbosity -> [Flag] -> Either String Verbosity
-getVerbosity v [] = Right v
-getVerbosity _ (FlagVerbosity Nothing    : fs) = getVerbosity Verbose fs
-getVerbosity _ (FlagVerbosity (Just "0") : fs) = getVerbosity Silent  fs
-getVerbosity _ (FlagVerbosity (Just "1") : fs) = getVerbosity Normal  fs
-getVerbosity _ (FlagVerbosity (Just "2") : fs) = getVerbosity Verbose fs
-getVerbosity _ (FlagVerbosity v : _) = Left ("Bad verbosity: " ++ show v)
-getVerbosity v (_ : fs) = getVerbosity v fs
+getVerbosity v _ = Right v
 
 deprecFlags :: [OptDescr Flag]
 deprecFlags = [
@@ -342,20 +268,12 @@ runit verbosity cli nonopts = do
   installSignalHandlers -- catch ^C and clean up
   prog <- getProgramName
   let
-        force
-          | FlagForce `elem` cli        = ForceAll
-          | FlagForceFiles `elem` cli   = ForceFiles
-          | otherwise                   = NoForce
-        as_arg | FlagIPId        `elem` cli = AsIpid
-               | FlagPackageKey  `elem` cli = AsPackageKey
-               | otherwise                  = AsDefault
-        auto_ghci_libs = FlagAutoGHCiLibs `elem` cli
-        multi_instance = FlagMultiInstance `elem` cli
-        expand_env_vars= FlagExpandEnvVars `elem` cli
-        mexpand_pkgroot= foldl' accumExpandPkgroot Nothing cli
-          where accumExpandPkgroot _ FlagExpandPkgroot   = Just True
-                accumExpandPkgroot _ FlagNoExpandPkgroot = Just False
-                accumExpandPkgroot x _                   = x
+        force = NoForce
+        as_arg = AsDefault
+        auto_ghci_libs = False
+        multi_instance = False
+        expand_env_vars= False
+        mexpand_pkgroot= Nothing
                 
         splitFields fields = unfoldr splitComma (',':fields)
           where splitComma "" = Nothing
@@ -393,8 +311,7 @@ runit verbosity cli nonopts = do
             ('*',_, _ ) -> Just (isSuffixOf (f t) . f)
             ( _ ,s,'*') -> Just (isPrefixOf (f (h:s)) . f)
             _           -> Nothing
-          where f | FlagIgnoreCase `elem` cli = map toLower
-                  | otherwise                 = id
+          where f = id
 #if defined(GLOB)
         glob x | System.Info.os=="mingw32" = do
           -- glob echoes its argument, after win32 filename globbing
@@ -514,16 +431,12 @@ getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
   -- package db lives in ghc's libdir.
   top_dir <- absolutePath (takeDirectory global_conf)
 
-  let no_user_db = FlagNoUserDb `elem` my_flags
-
   -- get the location of the user package database, and create it if necessary
   -- getAppUserDataDirectory can fail (e.g. if $HOME isn't set)
   e_appdir <- tryIO $ getAppUserDataDirectory "ghc"
 
   mb_user_conf <-
-    case [ f | FlagUserConfig f <- my_flags ] of
-      _ | no_user_db -> return Nothing
-      [] -> case e_appdir of
+    case e_appdir of
         Left _    -> return Nothing
         Right appdir -> do
           let subdir = targetARCH ++ '-':targetOS ++ '-':Version.version
@@ -532,7 +445,6 @@ getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
           case r of
             Nothing -> return (Just (dir </> "package.conf.d", False))
             Just f  -> return (Just (f, True))
-      fs -> return (Just (last fs, True))
 
   -- If the user database exists, and for "use_user" commands (which includes
   -- "ghc-pkg check" and all commands that modify the db) we will attempt to
@@ -557,11 +469,7 @@ getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
       virt_global_conf = last env_stack
 
   let db_flags = [ f | Just f <- map is_db_flag my_flags ]
-         where is_db_flag FlagUser
-                      | Just (user_conf, _user_exists) <- mb_user_conf 
-                      = Just user_conf
-               is_db_flag FlagGlobal     = Just virt_global_conf
-               is_db_flag (FlagConfig f) = Just f
+         where is_db_flag FlagGlobal     = Just virt_global_conf
                is_db_flag _              = Nothing
 
   let flag_db_names | null db_flags = env_stack
@@ -575,9 +483,7 @@ getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
   -- -f flags on the command line add to the database
   -- stack, unless any of them are present in the stack
   -- already.
-  let final_stack = filter (`notElem` env_stack)
-                     [ f | FlagConfig f <- reverse my_flags ]
-                     ++ env_stack
+  let final_stack = env_stack
 
   -- the database we actually modify is the one mentioned
   -- rightmost on the command-line.
@@ -1074,7 +980,7 @@ listPackages ::  Verbosity -> [Flag] -> Maybe PackageArg
              -> Maybe (String->Bool)
              -> IO ()
 listPackages verbosity my_flags mPackageName mModuleName = do
-  let simple_output = FlagSimpleOutput `elem` my_flags
+  let simple_output = False
   (db_stack, _, flag_db_stack) <- 
      getPkgDatabases verbosity False{-modify-} False{-use user-}
                                True{-use cache-} False{-expand vars-} my_flags
@@ -1168,8 +1074,7 @@ listPackages verbosity my_flags mPackageName mModuleName = do
 
 simplePackageList :: [Flag] -> [InstalledPackageInfo] -> IO ()
 simplePackageList my_flags pkgs = do
-   let showPkg = if FlagNamesOnly `elem` my_flags then display . pkgName
-                                                  else display
+   let showPkg = display
        -- Sort using instance Ord PackageId
        strs = map showPkg $ sort $ map sourcePackageId pkgs
    when (not (null pkgs)) $
@@ -1292,9 +1197,7 @@ describeField verbosity my_flags pkgarg fields expand_pkgroot = do
   fns <- mapM toField fields
   ps <- findPackages flag_db_stack pkgarg
   mapM_ (selectFields fns) ps
-  where showFun = if FlagSimpleOutput `elem` my_flags
-                  then showSimpleInstalledPackageInfoField
-                  else showInstalledPackageInfoField
+  where showFun = showInstalledPackageInfoField
         toField f = case showFun f of
                     Nothing -> die ("unknown field: " ++ f)
                     Just fn -> return fn
@@ -1313,7 +1216,7 @@ checkConsistency verbosity my_flags = do
          -- although check is not a modify command, we do need to use the user
          -- db, because we may need it to verify package deps.
 
-  let simple_output = FlagSimpleOutput `elem` my_flags
+  let simple_output = False
 
   let pkgs = allPackagesInStack db_stack
 
