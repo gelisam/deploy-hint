@@ -708,24 +708,6 @@ simplePackageList my_flags pkgs = do
       hPutStrLn stdout $ concat $ intersperse " " strs
 
 -- -----------------------------------------------------------------------------
--- Prints the highest (hidden or exposed) version of a package
-
--- ToDo: This is no longer well-defined with package keys, because the
--- dependencies may be varying versions
-latestPackage ::  Verbosity -> [Flag] -> PackageIdentifier -> IO ()
-latestPackage verbosity my_flags pkgid = do
-  (_, _, flag_db_stack) <- 
-     getPkgDatabases verbosity False{-modify-} False{-use user-}
-                               True{-use cache-} False{-expand vars-} my_flags
-
-  ps <- findPackages flag_db_stack (Id pkgid)
-  case ps of
-    [] -> die "no matches"
-    _  -> show_pkg . maximum . map sourcePackageId $ ps
-  where
-    show_pkg pid = hPutStrLn stdout (display pid)
-
--- -----------------------------------------------------------------------------
 -- Describe
 
 describePackage :: Verbosity -> [Flag] -> PackageArg -> Bool -> IO ()
