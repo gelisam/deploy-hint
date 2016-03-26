@@ -93,12 +93,9 @@ main :: IO ()
 main = do
   args <- getArgs
 
-  case getOpt Permute (flags ++ deprecFlags) args of
+  case getOpt Permute flags args of
         (cli,nonopts,[]) ->
            runit Normal cli nonopts
-        (_,_,errors) -> do
-           prog <- getProgramName
-           die (concat errors ++ shortUsage prog)
 
 -- -----------------------------------------------------------------------------
 -- Command-line syntax
@@ -118,123 +115,6 @@ flags = [
 
 data Verbosity = Silent | Normal | Verbose
     deriving (Show, Eq, Ord)
-
-getVerbosity :: Verbosity -> [Flag] -> Either String Verbosity
-getVerbosity v _ = Right v
-
-deprecFlags :: [OptDescr Flag]
-deprecFlags = [
-        -- put deprecated flags here
-  ]
-
-ourCopyright :: String
-ourCopyright = "GHC package manager version " ++ Version.version ++ "\n"
-
-shortUsage :: String -> String
-shortUsage prog = "For usage information see '" ++ prog ++ " --help'."
-
-usageHeader :: String -> String
-usageHeader prog = substProg prog $
-  "Usage:\n" ++
-  "  $p init {path}\n" ++
-  "    Create and initialise a package database at the location {path}.\n" ++
-  "    Packages can be registered in the new database using the register\n" ++
-  "    command with --package-db={path}.  To use the new database with GHC,\n" ++
-  "    use GHC's -package-db flag.\n" ++
-  "\n" ++
-  "  $p register {filename | -}\n" ++
-  "    Register the package using the specified installed package\n" ++
-  "    description. The syntax for the latter is given in the $p\n" ++
-  "    documentation.  The input file should be encoded in UTF-8.\n" ++
-  "\n" ++
-  "  $p update {filename | -}\n" ++
-  "    Register the package, overwriting any other package with the\n" ++
-  "    same name. The input file should be encoded in UTF-8.\n" ++
-  "\n" ++
-  "  $p unregister {pkg-id}\n" ++
-  "    Unregister the specified package.\n" ++
-  "\n" ++
-  "  $p expose {pkg-id}\n" ++
-  "    Expose the specified package.\n" ++
-  "\n" ++
-  "  $p hide {pkg-id}\n" ++
-  "    Hide the specified package.\n" ++
-  "\n" ++
-  "  $p trust {pkg-id}\n" ++
-  "    Trust the specified package.\n" ++
-  "\n" ++
-  "  $p distrust {pkg-id}\n" ++
-  "    Distrust the specified package.\n" ++
-  "\n" ++
-  "  $p list [pkg]\n" ++
-  "    List registered packages in the global database, and also the\n" ++
-  "    user database if --user is given. If a package name is given\n" ++
-  "    all the registered versions will be listed in ascending order.\n" ++
-  "    Accepts the --simple-output flag.\n" ++
-  "\n" ++
-  "  $p dot\n" ++
-  "    Generate a graph of the package dependencies in a form suitable\n" ++
-  "    for input for the graphviz tools.  For example, to generate a PDF" ++
-  "    of the dependency graph: ghc-pkg dot | tred | dot -Tpdf >pkgs.pdf" ++
-  "\n" ++
-  "  $p find-module {module}\n" ++
-  "    List registered packages exposing module {module} in the global\n" ++
-  "    database, and also the user database if --user is given.\n" ++
-  "    All the registered versions will be listed in ascending order.\n" ++
-  "    Accepts the --simple-output flag.\n" ++
-  "\n" ++
-  "  $p latest {pkg-id}\n" ++
-  "    Prints the highest registered version of a package.\n" ++
-  "\n" ++
-  "  $p check\n" ++
-  "    Check the consistency of package dependencies and list broken packages.\n" ++
-  "    Accepts the --simple-output flag.\n" ++
-  "\n" ++
-  "  $p describe {pkg}\n" ++
-  "    Give the registered description for the specified package. The\n" ++
-  "    description is returned in precisely the syntax required by $p\n" ++
-  "    register.\n" ++
-  "\n" ++
-  "  $p field {pkg} {field}\n" ++
-  "    Extract the specified field of the package description for the\n" ++
-  "    specified package. Accepts comma-separated multiple fields.\n" ++
-  "\n" ++
-  "  $p dump\n" ++
-  "    Dump the registered description for every package.  This is like\n" ++
-  "    \"ghc-pkg describe '*'\", except that it is intended to be used\n" ++
-  "    by tools that parse the results, rather than humans.  The output is\n" ++
-  "    always encoded in UTF-8, regardless of the current locale.\n" ++
-  "\n" ++
-  "  $p recache\n" ++
-  "    Regenerate the package database cache.  This command should only be\n" ++
-  "    necessary if you added a package to the database by dropping a file\n" ++
-  "    into the database directory manually.  By default, the global DB\n" ++
-  "    is recached; to recache a different DB use --user or --package-db\n" ++
-  "    as appropriate.\n" ++
-  "\n" ++
-  " Substring matching is supported for {module} in find-module and\n" ++
-  " for {pkg} in list, describe, and field, where a '*' indicates\n" ++
-  " open substring ends (prefix*, *suffix, *infix*).  Use --ipid to\n" ++
-  " match against the installed package ID instead.\n" ++
-  "\n" ++
-  "  When asked to modify a database (register, unregister, update,\n"++
-  "  hide, expose, and also check), ghc-pkg modifies the global database by\n"++
-  "  default.  Specifying --user causes it to act on the user database,\n"++
-  "  or --package-db can be used to act on another database\n"++
-  "  entirely. When multiple of these options are given, the rightmost\n"++
-  "  one is used as the database to act upon.\n"++
-  "\n"++
-  "  Commands that query the package database (list, tree, latest, describe,\n"++
-  "  field) operate on the list of databases specified by the flags\n"++
-  "  --user, --global, and --package-db.  If none of these flags are\n"++
-  "  given, the default is --global --user.\n"++
-  "\n" ++
-  " The following optional flags are also accepted:\n"
-
-substProg :: String -> String -> String
-substProg _ [] = []
-substProg prog ('$':'p':xs) = prog ++ substProg prog xs
-substProg prog (c:xs) = c : substProg prog xs
 
 -- -----------------------------------------------------------------------------
 -- Do the business
@@ -322,14 +202,7 @@ runit verbosity cli nonopts = do
 #endif
   --
   -- first, parse the command
-  case nonopts of
-    ["recache"] -> do
-        recache verbosity cli
-
-    [] -> do
-        die ("missing command\n" ++ shortUsage prog)
-    (_cmd:_) -> do
-        die ("command-line syntax error\n" ++ shortUsage prog)
+  recache verbosity cli
 
 parseCheck :: ReadP a a -> String -> String -> IO a
 parseCheck parser str what =
