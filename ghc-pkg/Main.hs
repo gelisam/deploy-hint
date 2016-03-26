@@ -710,36 +710,6 @@ simplePackageList my_flags pkgs = do
 -- -----------------------------------------------------------------------------
 -- Describe
 
-describePackage :: Verbosity -> [Flag] -> PackageArg -> Bool -> IO ()
-describePackage verbosity my_flags pkgarg expand_pkgroot = do
-  (_, _, flag_db_stack) <- 
-      getPkgDatabases verbosity False{-modify-} False{-use user-}
-                                True{-use cache-} expand_pkgroot my_flags
-  dbs <- findPackagesByDB flag_db_stack pkgarg
-  doDump expand_pkgroot [ (pkg, locationAbsolute db)
-                        | (db, pkgs) <- dbs, pkg <- pkgs ]
-
-dumpPackages :: Verbosity -> [Flag] -> Bool -> IO ()
-dumpPackages verbosity my_flags expand_pkgroot = do
-  (_, _, flag_db_stack) <- 
-     getPkgDatabases verbosity False{-modify-} False{-use user-}
-                               True{-use cache-} expand_pkgroot my_flags
-  doDump expand_pkgroot [ (pkg, locationAbsolute db)
-                        | db <- flag_db_stack, pkg <- packages db ]
-
-doDump :: Bool -> [(InstalledPackageInfo, FilePath)] -> IO ()
-doDump expand_pkgroot pkgs = do
-  -- fix the encoding to UTF-8, since this is an interchange format
-  hSetEncoding stdout utf8
-  putStrLn $
-    intercalate "---\n"
-    [ if expand_pkgroot
-        then showInstalledPackageInfo pkg
-        else showInstalledPackageInfo pkg ++ pkgrootField
-    | (pkg, pkgloc) <- pkgs
-    , let pkgroot      = takeDirectory pkgloc
-          pkgrootField = "pkgroot: " ++ show pkgroot ++ "\n" ]
-
 -- PackageId is can have globVersion for the version
 findPackages :: PackageDBStack -> PackageArg -> IO [InstalledPackageInfo]
 findPackages db_stack pkgarg
