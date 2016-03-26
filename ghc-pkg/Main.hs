@@ -542,22 +542,6 @@ mungePackagePaths top_dir pkgroot pkg =
 
 
 -- -----------------------------------------------------------------------------
--- Creating a new package DB
-
-initPackageDB :: FilePath -> Verbosity -> [Flag] -> IO ()
-initPackageDB filename verbosity _flags = do
-  let eexist = die ("cannot create: " ++ filename ++ " already exists")
-  b1 <- doesFileExist filename
-  when b1 eexist
-  b2 <- doesDirectoryExist filename
-  when b2 eexist
-  filename_abs <- absolutePath filename
-  changeDB verbosity [] PackageDB {
-                          location = filename, locationAbsolute = filename_abs,
-                          packages = []
-                        }
-
--- -----------------------------------------------------------------------------
 -- Registering
 
 registerPackage :: FilePath
