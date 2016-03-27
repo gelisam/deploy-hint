@@ -785,42 +785,8 @@ my_head _ (x : _) = x
 -----------------------------------------
 -- Cut and pasted from ghc/compiler/main/SysTools
 
-#if defined(mingw32_HOST_OS)
-subst :: Char -> Char -> String -> String
-subst a b ls = map (\ x -> if x == a then b else x) ls
-
-unDosifyPath :: FilePath -> FilePath
-unDosifyPath xs = subst '\\' '/' xs
-
-getLibDir :: IO (Maybe String)
-getLibDir = fmap (fmap (</> "lib")) $ getExecDir "/bin/ghc-pkg.exe"
-
--- (getExecDir cmd) returns the directory in which the current
---                  executable, which should be called 'cmd', is running
--- So if the full path is /a/b/c/d/e, and you pass "d/e" as cmd,
--- you'll get "/a/b/c" back as the result
-getExecDir :: String -> IO (Maybe String)
-getExecDir cmd =
-    getExecPath >>= maybe (return Nothing) removeCmdSuffix
-    where initN n = reverse . drop n . reverse
-          removeCmdSuffix = return . Just . initN (length cmd) . unDosifyPath
-
-getExecPath :: IO (Maybe String)
-getExecPath = try_size 2048 -- plenty, PATH_MAX is 512 under Win32.
-  where
-    try_size size = allocaArray (fromIntegral size) $ \buf -> do
-        ret <- c_GetModuleFileName nullPtr buf size
-        case ret of
-          0 -> return Nothing
-          _ | ret < size -> fmap Just $ peekCWString buf
-            | otherwise  -> try_size (size * 2)
-
-foreign import WINDOWS_CCONV unsafe "windows.h GetModuleFileNameW"
-  c_GetModuleFileName :: Ptr () -> CWString -> Word32 -> IO Word32
-#else
 getLibDir :: IO (Maybe String)
 getLibDir = return Nothing
-#endif
 
 -----------------------------------------
 -- Adapted from ghc/compiler/utils/Panic
