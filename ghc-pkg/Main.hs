@@ -57,15 +57,6 @@ main = do
 -- -----------------------------------------------------------------------------
 -- Do the business
 
-data Force = NoForce | ForceFiles | ForceAll | CannotForce
-  deriving (Eq,Ord)
-
--- | Enum flag representing argument type
-data AsPackageArg
-    = AsIpid
-    | AsPackageKey
-    | AsDefault
-
 -- | Represents how a package may be specified by a user on the command line.
 data PackageArg
     -- | A package identifier foo-0.1; the version might be a glob.
@@ -86,8 +77,6 @@ runit globalPackageDb = do
   installSignalHandlers -- catch ^C and clean up
   prog <- getProgramName
   let
-        force = NoForce
-        as_arg = AsDefault
         auto_ghci_libs = False
         multi_instance = False
         expand_env_vars= False
@@ -139,21 +128,6 @@ parseCheck parser str what =
   case [ x | (x,ys) <- readP_to_S parser str, all isSpace ys ] of
     [x] -> return x
     _ -> die ("cannot parse \'" ++ str ++ "\' as a " ++ what)
-
-readGlobPkgId :: String -> IO PackageIdentifier
-readGlobPkgId str = parseCheck parseGlobPackageId str "package identifier"
-
-parseGlobPackageId :: ReadP r PackageIdentifier
-parseGlobPackageId =
-  parse
-     +++
-  (do n <- parse
-      _ <- string "-*"
-      return (PackageIdentifier{ pkgName = n, pkgVersion = globVersion }))
-
--- globVersion means "all versions"
-globVersion :: Version
-globVersion = Version [] ["*"]
 
 -- -----------------------------------------------------------------------------
 -- Package databases
