@@ -51,11 +51,11 @@ import System.Posix hiding (fdToHandle)
 
 main :: IO ()
 main = do
-  args <- getArgs
+  [globalPackageDb] <- getArgs
+  let cli = [FlagGlobalConfig globalPackageDb, FlagGlobal]
+  let nonopts = []
 
-  case getOpt Permute flags args of
-        (cli,nonopts,[]) ->
-           runit Normal cli nonopts
+  runit Normal cli nonopts
 
 -- -----------------------------------------------------------------------------
 -- Command-line syntax
