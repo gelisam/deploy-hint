@@ -54,7 +54,7 @@ main = do
   [globalPackageDb] <- getArgs
   let cli = [FlagGlobalConfig globalPackageDb, FlagGlobal]
 
-  runit Normal cli
+  runit cli
 
 -- -----------------------------------------------------------------------------
 -- Command-line syntax
@@ -71,9 +71,6 @@ flags = [
   Option [] ["global-package-db"] (ReqArg FlagGlobalConfig "DIR")
         "location of the global package database"
   ]
-
-data Verbosity = Silent | Normal | Verbose
-    deriving (Show, Eq, Ord)
 
 -- -----------------------------------------------------------------------------
 -- Do the business
@@ -102,8 +99,8 @@ data PackageArg
     -- matches.
     | Substring String (String->Bool)
 
-runit :: Verbosity -> [Flag] -> IO ()
-runit verbosity cli = do
+runit :: [Flag] -> IO ()
+runit cli = do
   installSignalHandlers -- catch ^C and clean up
   prog <- getProgramName
   let
@@ -153,7 +150,7 @@ runit verbosity cli = do
           where f = id
   --
   -- first, parse the command
-  recache verbosity cli
+  recache cli
 
 parseCheck :: ReadP a a -> String -> String -> IO a
 parseCheck parser str what =
@@ -207,8 +204,7 @@ type PackageDBStack = [PackageDB]
 allPackagesInStack :: PackageDBStack -> [InstalledPackageInfo]
 allPackagesInStack = concatMap packages
 
-getPkgDatabases :: Verbosity
-                -> Bool    -- we are modifying, not reading
+getPkgDatabases :: Bool    -- we are modifying, not reading
                 -> Bool    -- use the user db
                 -> Bool    -- read caches, if available
                 -> Bool    -- expand vars, like ${pkgroot} and $topdir
@@ -224,7 +220,7 @@ getPkgDatabases :: Verbosity
                           -- is used as the list of package DBs for
                           -- commands that just read the DB, such as 'list'.
 
-getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
+getPkgDatabases modify use_user use_cache expand_vars my_flags = do
   -- first we determine the location of the global package config.  On Windows,
   -- this is found relative to the ghc-pkg.exe binary, whereas on Unix the
   -- location is passed to the binary using the --global-package-db flag by the
@@ -310,18 +306,13 @@ getPkgDatabases verbosity modify use_user use_cache expand_vars my_flags = do
         | otherwise     = Just (last db_flags)
 
   db_stack  <- sequence
-    [ do db <- readParseDatabase verbosity mb_user_conf modify use_cache db_path
+    [ do db <- readParseDatabase mb_user_conf modify use_cache db_path
          if expand_vars then return (mungePackageDBPaths top_dir db)
                         else return db
     | db_path <- final_stack ]
 
   let flag_db_stack = [ db | db_name <- flag_db_names,
                         db <- db_stack, location db == db_name ]
-
-  when (verbosity > Normal) $ do
-    infoLn ("db stack: " ++ show (map location db_stack))
-    infoLn ("modifying: " ++ show to_modify)
-    infoLn ("flag db stack: " ++ show (map location flag_db_stack))
 
   return (db_stack, to_modify, flag_db_stack)
 
@@ -335,14 +326,13 @@ lookForPackageDBIn dir = do
     exists_file <- doesFileExist path_file
     if exists_file then return (Just path_file) else return Nothing
 
-readParseDatabase :: Verbosity
-                  -> Maybe (FilePath,Bool)
+readParseDatabase :: Maybe (FilePath,Bool)
                   -> Bool -- we will be modifying, not just reading
                   -> Bool -- use cache
                   -> FilePath
                   -> IO PackageDB
 
-readParseDatabase verbosity mb_user_conf modify use_cache path
+readParseDatabase mb_user_conf modify use_cache path
   -- the user database (only) is allowed to be non-existent
   | Just (user_conf,False) <- mb_user_conf, path == user_conf
   = mkPackageDB []
@@ -375,23 +365,9 @@ readParseDatabase verbosity mb_user_conf modify use_cache path
                   ignore_cache (const $ return ())
                 Right tcache -> do
                   let compareTimestampToCache file =
-                          when (verbosity >= Verbose) $ do
-                              tFile <- getModificationTime file
-                              compareTimestampToCache' file tFile
-                      compareTimestampToCache' file tFile = do
-                          let rel = case tcache `compare` tFile of
-                                    LT -> " (NEWER than cache)"
-                                    GT -> " (older than cache)"
-                                    EQ -> " (same as cache)"
-                          warn ("Timestamp " ++ show tFile
-                             ++ " for " ++ file ++ rel)
-                  when (verbosity >= Verbose) $ do
-                      warn ("Timestamp " ++ show tcache ++ " for " ++ cache)
-                      compareTimestampToCache' path tdir
+                          return ()
                   if tcache >= tdir
                       then do
-                          when (verbosity > Normal) $
-                             infoLn ("using cache: " ++ cache)
                           pkgs <- GhcPkg.readPackageDbForGhcPkg cache
                           mkPackageDB pkgs
                       else do
@@ -405,15 +381,14 @@ readParseDatabase verbosity mb_user_conf modify use_cache path
                  ignore_cache checkTime = do
                      let confs = filter (".conf" `isSuffixOf`) fs
                          doFile f = do checkTime f
-                                       parseSingletonPackageConf verbosity f
+                                       parseSingletonPackageConf f
                      pkgs <- mapM doFile $ map (path </>) confs
                      mkPackageDB pkgs
 
                  -- We normally report cache errors for read-only commands,
                  -- since modify commands because will usually fix the cache.
                  whenReportCacheErrors =
-                     when (   verbosity >  Normal
-                           || verbosity >= Normal && not modify)
+                     when (not modify)
   where
     mkPackageDB pkgs = do
       path_abs <- absolutePath path
@@ -423,9 +398,8 @@ readParseDatabase verbosity mb_user_conf modify use_cache path
         packages = pkgs
       }
 
-parseSingletonPackageConf :: Verbosity -> FilePath -> IO InstalledPackageInfo
-parseSingletonPackageConf verbosity file = do
-  when (verbosity > Normal) $ infoLn ("reading package config: " ++ file)
+parseSingletonPackageConf :: FilePath -> IO InstalledPackageInfo
+parseSingletonPackageConf file = do
   readUTF8File file >>= fmap fst . parsePackageInfo
 
 cachefilename :: FilePath
@@ -523,11 +497,11 @@ data DBOp = RemovePackage InstalledPackageInfo
           | AddPackage    InstalledPackageInfo
           | ModifyPackage InstalledPackageInfo
 
-changeDB :: Verbosity -> [DBOp] -> PackageDB -> IO ()
-changeDB verbosity cmds db = do
+changeDB :: [DBOp] -> PackageDB -> IO ()
+changeDB cmds db = do
   let db' = updateInternalDB db cmds
   createDirectoryIfMissing True (location db)
-  changeDBDir verbosity cmds db'
+  changeDBDir cmds db'
 
 updateInternalDB :: PackageDB -> [DBOp] -> PackageDB
 updateInternalDB db cmds = db{ packages = foldl do_cmd (packages db) cmds }
@@ -539,24 +513,22 @@ updateInternalDB db cmds = db{ packages = foldl do_cmd (packages db) cmds }
     do_cmd (do_cmd pkgs (RemovePackage p)) (AddPackage p)
     
 
-changeDBDir :: Verbosity -> [DBOp] -> PackageDB -> IO ()
-changeDBDir verbosity cmds db = do
+changeDBDir :: [DBOp] -> PackageDB -> IO ()
+changeDBDir cmds db = do
   mapM_ do_cmd cmds
-  updateDBCache verbosity db
+  updateDBCache db
  where
   do_cmd (RemovePackage p) = do
     let file = location db </> display (installedPackageId p) <.> "conf"
-    when (verbosity > Normal) $ infoLn ("removing " ++ file)
     removeFileSafe file
   do_cmd (AddPackage p) = do
     let file = location db </> display (installedPackageId p) <.> "conf"
-    when (verbosity > Normal) $ infoLn ("writing " ++ file)
     writeFileUtf8Atomic file (showInstalledPackageInfo p)
   do_cmd (ModifyPackage p) = 
     do_cmd (AddPackage p)
 
-updateDBCache :: Verbosity -> PackageDB -> IO ()
-updateDBCache verbosity db = do
+updateDBCache :: PackageDB -> IO ()
+updateDBCache db = do
   let filename = location db </> cachefilename
 
       pkgsCabalFormat :: [InstalledPackageInfo]
@@ -565,8 +537,6 @@ updateDBCache verbosity db = do
       pkgsGhcCacheFormat :: [PackageCacheFormat]
       pkgsGhcCacheFormat = map convertPackageInfoToCacheFormat pkgsCabalFormat
 
-  when (verbosity > Normal) $
-      infoLn ("writing cache " ++ filename)
   GhcPkg.writePackageDb filename pkgsGhcCacheFormat pkgsCabalFormat
     `catchIO` \e ->
       if isPermissionError e
@@ -636,16 +606,16 @@ instance GhcPkg.BinaryStringRep String where
 -- -----------------------------------------------------------------------------
 -- Exposing, Hiding, Trusting, Distrusting, Unregistering are all similar
 
-recache :: Verbosity -> [Flag] -> IO ()
-recache verbosity my_flags = do
+recache :: [Flag] -> IO ()
+recache my_flags = do
   (db_stack, Just to_modify, _flag_dbs) <- 
-     getPkgDatabases verbosity True{-modify-} True{-use user-} False{-no cache-}
-                               False{-expand vars-} my_flags
+     getPkgDatabases True{-modify-} True{-use user-} False{-no cache-}
+                     False{-expand vars-} my_flags
   let
         db_to_operate_on = my_head "recache" $
                            filter ((== to_modify).location) db_stack
   --
-  changeDB verbosity [] db_to_operate_on
+  changeDB [] db_to_operate_on
 
 -- -----------------------------------------------------------------------------
 -- Listing packages
