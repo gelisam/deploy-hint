@@ -55,22 +55,6 @@ main = do
   runit globalPackageDb
 
 -- -----------------------------------------------------------------------------
--- Command-line syntax
-
-data Flag
-  = FlagGlobal
-  | FlagGlobalConfig FilePath
-  deriving Eq
-
-flags :: [OptDescr Flag]
-flags = [
-  Option [] ["global"] (NoArg FlagGlobal)
-        "use the global package database",
-  Option [] ["global-package-db"] (ReqArg FlagGlobalConfig "DIR")
-        "location of the global package database"
-  ]
-
--- -----------------------------------------------------------------------------
 -- Do the business
 
 data Force = NoForce | ForceFiles | ForceAll | CannotForce
