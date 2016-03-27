@@ -751,29 +751,6 @@ matchesPkg :: PackageArg -> InstalledPackageInfo -> Bool
 
 type ValidateWarning = String
 
--- ---------------------------------------------------------------------------
--- expanding environment variables in the package configuration
-
-expandEnvVars :: String -> Force -> IO String
-expandEnvVars str0 force = go str0 ""
- where
-   go "" acc = return $! reverse acc
-   go ('$':'{':str) acc | (var, '}':rest) <- break close str
-        = do value <- lookupEnvVar var
-             go rest (reverse value ++ acc)
-        where close c = c == '}' || c == '\n' -- don't span newlines
-   go (c:str) acc
-        = go str (c:acc)
-
-   lookupEnvVar :: String -> IO String
-   lookupEnvVar "pkgroot"    = return "${pkgroot}"    -- these two are special,
-   lookupEnvVar "pkgrooturl" = return "${pkgrooturl}" -- we don't expand them
-   lookupEnvVar nm =
-        catchIO (System.Environment.getEnv nm)
-           (\ _ -> do dieOrForceAll force ("Unable to expand variable " ++
-                                        show nm)
-                      return "")
-
 -----------------------------------------------------------------------------
 
 getProgramName :: IO String
