@@ -1,6 +1,4 @@
-{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, RecordWildCards,
-             GeneralizedNewtypeDeriving, StandaloneDeriving #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE FlexibleInstances #-}
 -----------------------------------------------------------------------------
 --
 -- (c) The University of Glasgow 2004-2009.
