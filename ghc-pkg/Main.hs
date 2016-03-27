@@ -13,8 +13,6 @@ module Main (main) where
 
 import Version ( version, targetOS, targetARCH )
 import qualified GHC.PackageDb as GhcPkg
-import qualified Distribution.Simple.PackageIndex as PackageIndex
-import qualified Data.Graph as Graph
 import qualified Distribution.ModuleName as ModuleName
 import Distribution.ModuleName (ModuleName)
 import Distribution.InstalledPackageInfo as Cabal
@@ -26,22 +24,14 @@ import Distribution.Version
 import Distribution.Simple.Utils (fromUTF8, toUTF8)
 import System.FilePath as FilePath
 import qualified System.FilePath.Posix as FilePath.Posix
-import System.Process
 import System.Directory ( getAppUserDataDirectory, createDirectoryIfMissing,
                           getModificationTime )
-import Text.Printf
 
-import Prelude
 
 import System.Console.GetOpt
 import qualified Control.Exception as Exception
-import Data.Maybe
 
 import Data.Char ( isSpace, toLower )
-import Data.Ord (comparing)
-#if __GLASGOW_HASKELL__ < 709
-import Control.Applicative (Applicative(..))
-#endif
 import Control.Monad
 import System.Directory ( doesDirectoryExist, getDirectoryContents,
                           doesFileExist, renameFile, removeFile,
@@ -56,35 +46,7 @@ import Control.Concurrent
 
 import qualified Data.ByteString.Char8 as BS
 
-#if defined(mingw32_HOST_OS)
--- mingw32 needs these for getExecDir
-import Foreign
-import Foreign.C
-#endif
-
-#ifdef mingw32_HOST_OS
-import GHC.ConsoleHandler
-#else
 import System.Posix hiding (fdToHandle)
-#endif
-
-#if defined(GLOB)
-import qualified System.Info(os)
-#endif
-
-#if !defined(mingw32_HOST_OS) && !defined(BOOTSTRAPPING)
-import System.Console.Terminfo as Terminfo
-#endif
-
-#ifdef mingw32_HOST_OS
-# if defined(i386_HOST_ARCH)
-#  define WINDOWS_CCONV stdcall
-# elif defined(x86_64_HOST_ARCH)
-#  define WINDOWS_CCONV ccall
-# else
-#  error Unknown mingw32 arch
-# endif
-#endif
 
 -- -----------------------------------------------------------------------------
 -- Entry point
