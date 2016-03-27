@@ -751,44 +751,6 @@ matchesPkg :: PackageArg -> InstalledPackageInfo -> Bool
 
 type ValidateWarning = String
 
--- -----------------------------------------------------------------------------
--- Searching for modules
-
-#if not_yet
-
-findModules :: [FilePath] -> IO [String]
-findModules paths =
-  mms <- mapM searchDir paths
-  return (concat mms)
-
-searchDir path prefix = do
-  fs <- getDirectoryEntries path `catchIO` \_ -> return []
-  searchEntries path prefix fs
-
-searchEntries path prefix [] = return []
-searchEntries path prefix (f:fs)
-  | looks_like_a_module  =  do
-        ms <- searchEntries path prefix fs
-        return (prefix `joinModule` f : ms)
-  | looks_like_a_component  =  do
-        ms <- searchDir (path </> f) (prefix `joinModule` f)
-        ms' <- searchEntries path prefix fs
-        return (ms ++ ms')
-  | otherwise
-        searchEntries path prefix fs
-
-  where
-        (base,suffix) = splitFileExt f
-        looks_like_a_module =
-                suffix `elem` haskell_suffixes &&
-                all okInModuleName base
-        looks_like_a_component =
-                null suffix && all okInModuleName base
-
-okInModuleName c
-
-#endif
-
 -- ---------------------------------------------------------------------------
 -- expanding environment variables in the package configuration
 
