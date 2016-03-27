@@ -759,9 +759,6 @@ getProgramName = liftM (`withoutSuffix` ".bin") getProgName
             | suff `isSuffixOf` str = take (length str - length suff) str
             | otherwise             = str
 
-bye :: String -> IO a
-bye s = putStr s >> exitWith ExitSuccess
-
 die :: String -> IO a
 die = dieWith 1
 
@@ -771,10 +768,6 @@ dieWith ec s = do
   reportError (prog ++ ": " ++ s)
   exitWith (ExitFailure ec)
 
-dieOrForceAll :: Force -> String -> IO ()
-dieOrForceAll ForceAll s = ignoreError s
-dieOrForceAll _other s   = dieForcible s
-
 warn :: String -> IO ()
 warn = reportError
 
@@ -782,17 +775,8 @@ warn = reportError
 infoLn :: String -> IO ()
 infoLn = putStrLn
 
-info :: String -> IO ()
-info = putStr
-
-ignoreError :: String -> IO ()
-ignoreError s = reportError (s ++ " (ignoring)")
-
 reportError :: String -> IO ()
 reportError s = do hFlush stdout; hPutStrLn stderr s
-
-dieForcible :: String -> IO ()
-dieForcible s = die (s ++ " (use --force to override)")
 
 my_head :: String -> [a] -> a
 my_head s []      = error s
