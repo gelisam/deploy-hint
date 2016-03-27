@@ -52,9 +52,7 @@ import System.Posix hiding (fdToHandle)
 main :: IO ()
 main = do
   [globalPackageDb] <- getArgs
-  let cli = [FlagGlobalConfig globalPackageDb, FlagGlobal]
-
-  runit cli
+  runit globalPackageDb
 
 -- -----------------------------------------------------------------------------
 -- Command-line syntax
@@ -99,8 +97,8 @@ data PackageArg
     -- matches.
     | Substring String (String->Bool)
 
-runit :: [Flag] -> IO ()
-runit cli = do
+runit :: FilePath -> IO ()
+runit globalPackageDb = do
   installSignalHandlers -- catch ^C and clean up
   prog <- getProgramName
   let
@@ -150,7 +148,7 @@ runit cli = do
           where f = id
   --
   -- first, parse the command
-  recache cli
+  recache globalPackageDb
 
 parseCheck :: ReadP a a -> String -> String -> IO a
 parseCheck parser str what =
@@ -208,7 +206,7 @@ getPkgDatabases :: Bool    -- we are modifying, not reading
                 -> Bool    -- use the user db
                 -> Bool    -- read caches, if available
                 -> Bool    -- expand vars, like ${pkgroot} and $topdir
-                -> [Flag]
+                -> FilePath
                 -> IO (PackageDBStack, 
                           -- the real package DB stack: [global,user] ++ 
                           -- DBs specified on the command line with -f.
@@ -220,23 +218,13 @@ getPkgDatabases :: Bool    -- we are modifying, not reading
                           -- is used as the list of package DBs for
                           -- commands that just read the DB, such as 'list'.
 
-getPkgDatabases modify use_user use_cache expand_vars my_flags = do
+getPkgDatabases modify use_user use_cache expand_vars globalPackageDb = do
   -- first we determine the location of the global package config.  On Windows,
   -- this is found relative to the ghc-pkg.exe binary, whereas on Unix the
   -- location is passed to the binary using the --global-package-db flag by the
   -- wrapper script.
   let err_msg = "missing --global-package-db option, location of global package database unknown\n"
-  global_conf <-
-     case [ f | FlagGlobalConfig f <- my_flags ] of
-        [] -> do mb_dir <- getLibDir
-                 case mb_dir of
-                   Nothing  -> die err_msg
-                   Just dir -> do
-                     r <- lookForPackageDBIn dir
-                     case r of
-                       Nothing -> die ("Can't find package database in " ++ dir)
-                       Just path -> return path
-        fs -> return (last fs)
+  let global_conf = globalPackageDb
 
   -- The value of the $topdir variable used in some package descriptions
   -- Note that the way we calculate this is slightly different to how it
@@ -281,12 +269,9 @@ getPkgDatabases modify use_user use_cache expand_vars my_flags = do
         -- This is the database we modify by default.
       virt_global_conf = last env_stack
 
-  let db_flags = [ f | Just f <- map is_db_flag my_flags ]
-         where is_db_flag FlagGlobal     = Just virt_global_conf
-               is_db_flag _              = Nothing
+  let db_flags = [virt_global_conf]
 
-  let flag_db_names | null db_flags = env_stack
-                    | otherwise     = reverse (nub db_flags)
+  let flag_db_names = reverse (nub db_flags)
 
   -- For a "modify" command, treat all the databases as
   -- a stack, where we are modifying the top one, but it
@@ -606,11 +591,11 @@ instance GhcPkg.BinaryStringRep String where
 -- -----------------------------------------------------------------------------
 -- Exposing, Hiding, Trusting, Distrusting, Unregistering are all similar
 
-recache :: [Flag] -> IO ()
-recache my_flags = do
+recache :: FilePath -> IO ()
+recache globalPackageDb = do
   (db_stack, Just to_modify, _flag_dbs) <- 
      getPkgDatabases True{-modify-} True{-use user-} False{-no cache-}
-                     False{-expand vars-} my_flags
+                     False{-expand vars-} globalPackageDb
   let
         db_to_operate_on = my_head "recache" $
                            filter ((== to_modify).location) db_stack
@@ -620,8 +605,8 @@ recache my_flags = do
 -- -----------------------------------------------------------------------------
 -- Listing packages
 
-simplePackageList :: [Flag] -> [InstalledPackageInfo] -> IO ()
-simplePackageList my_flags pkgs = do
+simplePackageList :: FilePath -> [InstalledPackageInfo] -> IO ()
+simplePackageList globalPackageDb pkgs = do
    let showPkg = display
        -- Sort using instance Ord PackageId
        strs = map showPkg $ sort $ map sourcePackageId pkgs
