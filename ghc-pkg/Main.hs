@@ -53,9 +53,8 @@ main :: IO ()
 main = do
   [globalPackageDb] <- getArgs
   let cli = [FlagGlobalConfig globalPackageDb, FlagGlobal]
-  let nonopts = []
 
-  runit Normal cli nonopts
+  runit Normal cli
 
 -- -----------------------------------------------------------------------------
 -- Command-line syntax
@@ -103,8 +102,8 @@ data PackageArg
     -- matches.
     | Substring String (String->Bool)
 
-runit :: Verbosity -> [Flag] -> [String] -> IO ()
-runit verbosity cli nonopts = do
+runit :: Verbosity -> [Flag] -> IO ()
+runit verbosity cli = do
   installSignalHandlers -- catch ^C and clean up
   prog <- getProgramName
   let
