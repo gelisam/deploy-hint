@@ -798,28 +798,9 @@ installSignalHandlers = do
       interrupt = Exception.throwTo threadid
                                     (Exception.ErrorCall "interrupted")
   --
-#if !defined(mingw32_HOST_OS)
   _ <- installHandler sigQUIT (Catch interrupt) Nothing
   _ <- installHandler sigINT  (Catch interrupt) Nothing
   return ()
-#else
-  -- GHC 6.3+ has support for console events on Windows
-  -- NOTE: running GHCi under a bash shell for some reason requires
-  -- you to press Ctrl-Break rather than Ctrl-C to provoke
-  -- an interrupt.  Ctrl-C is getting blocked somewhere, I don't know
-  -- why --SDM 17/12/2004
-  let sig_handler ControlC = interrupt
-      sig_handler Break    = interrupt
-      sig_handler _        = return ()
-
-  _ <- installHandler (Catch sig_handler)
-  return ()
-#endif
-
-#if mingw32_HOST_OS || mingw32_TARGET_OS
-throwIOIO :: Exception.IOException -> IO a
-throwIOIO = Exception.throwIO
-#endif
 
 catchIO :: IO a -> (Exception.IOException -> IO a) -> IO a
 catchIO = Exception.catch
@@ -840,21 +821,7 @@ withFileAtomic targetFile write_content = do
   (newFile, newHandle) <- openNewFile targetDir template
   do  write_content newHandle
       hClose newHandle
-#if mingw32_HOST_OS || mingw32_TARGET_OS
       renameFile newFile targetFile
-        -- If the targetFile exists then renameFile will fail
-        `catchIO` \err -> do
-          exists <- doesFileExist targetFile
-          if exists
-            then do removeFileSafe targetFile
-                    -- Big fat hairy race condition
-                    renameFile newFile targetFile
-                    -- If the removeFile succeeds and the renameFile fails
-                    -- then we've lost the atomic property.
-            else throwIOIO err
-#else
-      renameFile newFile targetFile
-#endif
    `Exception.onException` do hClose newHandle
                               removeFileSafe newFile
   where
