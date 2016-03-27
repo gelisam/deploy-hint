@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, TypeSynonymInstances, FlexibleInstances, RecordWildCards,
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances, RecordWildCards,
              GeneralizedNewtypeDeriving, StandaloneDeriving #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 -----------------------------------------------------------------------------
@@ -154,14 +154,6 @@ runit verbosity cli nonopts = do
             ( _ ,s,'*') -> Just (isPrefixOf (f (h:s)) . f)
             _           -> Nothing
           where f = id
-#if defined(GLOB)
-        glob x | System.Info.os=="mingw32" = do
-          -- glob echoes its argument, after win32 filename globbing
-          (_,o,_,_) <- runInteractiveCommand ("glob "++x)
-          txt <- hGetContents o
-          return (read txt)
-        glob x | otherwise = return [x]
-#endif
   --
   -- first, parse the command
   recache verbosity cli
