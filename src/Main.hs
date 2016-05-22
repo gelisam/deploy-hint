@@ -30,17 +30,17 @@ main = do
     putStrLn "please type '()':"
     u <- readLn
     
-    r <- runInterpreter libdir (interpretDiag u)
+    r <- unsafeRunInterpreterWithArgsLibdir [] libdir (interpretDiag u)
     printf "(\\x -> (x,x)) %s is:\n" (show u)
     print r
     
     putStrLn "and now, let's try the Prelude..."
-    r <- runInterpreter libdir (interpretId u)
+    r <- unsafeRunInterpreterWithArgsLibdir [] libdir (interpretId u)
     printf "id %s is:\n" (show u)
     print r
     
     putStrLn "and finally, a library from hackage."
-    r <- runInterpreter libdir (interpretDon'tReturn u)
+    r <- unsafeRunInterpreterWithArgsLibdir [] libdir (interpretDon'tReturn u)
     printf "don't (return %s) is:\n" (show u)
     case r of
       Left err -> print err
