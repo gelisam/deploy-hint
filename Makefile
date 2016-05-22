@@ -17,7 +17,10 @@ test: build
 	echo '()' | docker run -i --name $(WITHOUT_GHC_CONTAINER) $(WITHOUT_GHC_IMAGE) /root/my-program/my-program
 
 
-proofs/$(WITH_GHC_IMAGE): with-ghc.docker my-program.cabal src/Main.hs
+customized-hint/hint.cabal:
+	git clone --branch=libdir-arg git@github.com:mvdan/hint.git customized-hint
+
+proofs/$(WITH_GHC_IMAGE): with-ghc.docker customized-hint/hint.cabal my-program.cabal src/Main.hs
 	mkdir -p proofs
 	docker rmi $(WITH_GHC_IMAGE):latest &> /dev/null || true # prevent orphans
 	docker build -f $< -t $(WITH_GHC_IMAGE):latest . # fast if :cache contains shared work
