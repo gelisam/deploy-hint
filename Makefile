@@ -18,7 +18,7 @@ test: build
 
 
 customized-hint/hint.cabal:
-	git clone git@github.com:mvdan/hint.git customized-hint
+	git clone --branch=v0.5.2 git@github.com:mvdan/hint.git customized-hint
 
 proofs/$(WITH_GHC_IMAGE): with-ghc.docker customized-hint/hint.cabal my-program.cabal src/Main.hs
 	mkdir -p proofs
