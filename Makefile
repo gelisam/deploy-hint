@@ -51,4 +51,4 @@ clean:
 clobber: clean
 	docker rmi $(WITH_GHC_IMAGE):cache || true
 	docker rmi $(WITHOUT_GHC_IMAGE) || true
-	rm -rf my-program.tar.gz
+	rm -rf my-program.tar.gz customized-hint
