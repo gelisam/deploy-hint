@@ -1,4 +1,5 @@
 import Control.Monad
+import Control.Monad.Trans.Reader
 import Text.Printf
 import Language.Haskell.Interpreter
 import Language.Haskell.Interpreter.Unsafe
@@ -15,15 +16,20 @@ interpretId u = do
     f <- interpret "id" (as :: () -> ())
     return (f u)
 
-interpretDon'tReturn :: () -> Interpreter (IO ())
-interpretDon'tReturn u = do
-    setImports ["Prelude","Acme.Dont"]
-    don't <- interpret "don't" (as :: IO () -> IO ())
-    return (don't (return u))
+interpretAsk :: () -> Interpreter ()
+interpretAsk u = do
+    setImports
+      [ "Prelude"
+      , "Data.Functor.Identity"
+      , "Control.Monad.Trans.Reader"
+      ]
+    body <- interpret "ask" (as :: Reader () ())
+    return (runReader body u)
 
 
 libdir :: String
 libdir = "/root/my-program/haskell-libs"
+
 
 main :: IO ()
 main = do
@@ -40,10 +46,9 @@ main = do
     print r
     
     putStrLn "and finally, a library from hackage."
-    r <- unsafeRunInterpreterWithArgsLibdir [] libdir (interpretDon'tReturn u)
-    printf "don't (return %s) is:\n" (show u)
+    r <- unsafeRunInterpreterWithArgsLibdir [] libdir (interpretAsk u)
+    printf "runReader ask %s is:\n" (show u)
     case r of
       Left err -> print err
-      Right body -> do
-        r <- body
+      Right r -> do
         print r

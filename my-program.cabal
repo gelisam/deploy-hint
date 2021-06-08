@@ -19,7 +19,7 @@ executable my-program
   -- other-modules:       
   -- other-extensions:    
   build-depends:       base >=4.8 && <4.9
-                     , acme-dont == 1.1
+                     , transformers == 0.4.2.0
                      , hint == 0.5.2
                      , exceptions < 0.9
   hs-source-dirs:      src
