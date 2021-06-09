@@ -23,7 +23,7 @@ interpretDon'tReturn u = do
 
 
 libdir :: String
-libdir = "/root/my-program/haskell-libs"
+libdir = "haskell-libs"
 
 main :: IO ()
 main = do
