@@ -27,20 +27,20 @@ RUN mkdir -p                                                               my-pr
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/ghc-prim-*.conf    my-program/haskell-libs/package.conf.d/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/package.conf.d/integer-gmp-*.conf my-program/haskell-libs/package.conf.d/ && \
     cp -r .cabal-sandbox/*-packages.conf.d/acme-dont-*.conf                my-program/haskell-libs/package.conf.d/ && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/haskell-libs/g' \
                                                                            my-program/haskell-libs/package.conf.d/builtin_rts.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/haskell-libs/g' \
                                                                            my-program/haskell-libs/package.conf.d/base-*.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/haskell-libs/g' \
                                                                            my-program/haskell-libs/package.conf.d/ghc-prim-*.conf && \
-    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+    sed -i 's/\/opt\/ghc\/7.10.3\/lib\/ghc-7.10.3/haskell-libs/g' \
                                                                            my-program/haskell-libs/package.conf.d/integer-gmp-*.conf && \
-    sed -i 's/\/root\/.cabal-sandbox\/lib\/x86_64-linux-ghc-7.10.3/\/root\/my-program\/haskell-libs/g' \
+    sed -i 's/\/root\/.cabal-sandbox\/lib\/x86_64-linux-ghc-7.10.3/haskell-libs/g' \
                                                                            my-program/haskell-libs/package.conf.d/acme-dont-*.conf && \
     ghc-pkg --package-db=my-program/haskell-libs/package.conf.d recache && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/platformConstants                 my-program/haskell-libs/ && \
     cp -r /opt/ghc/7.10.3/lib/ghc-7.10.3/settings                          my-program/haskell-libs/ && \
-    sed -i 's/\/usr\/bin\/gcc/\/root\/my-program\/bin\/fake_gcc.sh/g'      my-program/haskell-libs/settings && \
+    sed -i 's/\/usr\/bin\/gcc/bin\/fake_gcc.sh/g'      my-program/haskell-libs/settings && \
     mkdir -p                                                               my-program/bin
 
 COPY fake_gcc.sh /root/my-program/bin/fake_gcc.sh
@@ -49,4 +49,4 @@ RUN cabal install && \
     cp .cabal-sandbox/bin/my-program my-program/ && \
     tar czvf my-program.tar.gz my-program
 
-CMD ["./my-program/my-program"]
+CMD ["cd my-program;./my-program"]
